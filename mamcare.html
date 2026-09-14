@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MamaCare — Antenatal &amp; Child Health Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+:root{
+  --raspberry:#D94F70;
+  --raspberry-deep:#B93A5A;
+  --emerald:#1F6F5C;
+  --emerald-light:#2E9C81;
+  --gold:#E8A93D;
+  --danger:#C43D3D;
+  --danger-bg:#FCEAEA;
+  --ink:#2B2A33;
+  --ink-soft:#5B5866;
+  --ivory:#FFF8F0;
+  --ivory-dim:#F6EEE1;
+  --line:#EBDFCB;
+  --backdrop:#15171C;
+  --backdrop-2:#20232B;
+  --radius-lg:26px;
+  --radius-md:16px;
+  --radius-sm:10px;
+  --shadow:0 20px 50px -20px rgba(0,0,0,.5);
+}
+*,*::before,*::after{ box-sizing:border-box; }
+body{
+  margin:0; min-height:100vh;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(217,79,112,.12), transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgba(31,111,92,.15), transparent 55%),
+    var(--backdrop);
+  font-family:'Work Sans',sans-serif;
+  color:var(--ink);
+  display:flex; align-items:center; justify-content:center;
+  padding:36px 16px;
+}
+h1,h2,h3,h4{ margin:0; font-family:'Baloo 2',sans-serif; font-weight:700; }
+p{ margin:0; }
+button{ font-family:inherit; cursor:pointer; border:none; background:none; }
+input,select,textarea{ font-family:inherit; }
+ul{ margin:0; padding:0; list-style:none; }
+
+/* ---------------- Phone frame ---------------- */
+.frame-wrap{ display:flex; flex-direction:column; align-items:center; gap:18px; }
+.frame-caption{ color:#8B90A0; font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
+.phone{
+  width:390px; max-width:94vw; height:830px; max-height:88vh;
+  background:var(--backdrop-2);
+  border-radius:46px; padding:14px;
+  box-shadow:var(--shadow), 0 0 0 1px rgba(255,255,255,.04);
+  position:relative;
+}
+.screen{
+  background:var(--ivory);
+  width:100%; height:100%;
+  border-radius:34px;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  position:relative;
+}
+.notch{
+  position:absolute; top:14px; left:50%; transform:translateX(-50%);
+  width:120px; height:22px; background:var(--backdrop-2); border-radius:0 0 16px 16px; z-index:20;
+}
+.statusbar{
+  height:44px; flex:0 0 auto; display:flex; align-items:flex-end; justify-content:space-between;
+  padding:0 26px 6px; font-family:'JetBrains Mono',monospace; font-size:.72rem; color:var(--ink);
+}
+
+/* ---------------- App header ---------------- */
+.app-header{
+  padding:6px 22px 18px; flex:0 0 auto;
+}
+.app-header .eyebrow{
+  font-family:'JetBrains Mono',monospace; font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--raspberry);
+}
+.app-header h2{ font-size:1.45rem; margin-top:4px; color:var(--ink); }
+.app-header p.sub{ color:var(--ink-soft); font-size:.85rem; margin-top:4px; }
+
+/* ---------------- Scroll content ---------------- */
+.app-body{
+  flex:1 1 auto; overflow-y:auto; padding:4px 20px 22px;
+  scrollbar-width:none;
+}
+.app-body::-webkit-scrollbar{ display:none; }
+
+.screen-panel{ display:none; flex-direction:column; height:100%; }
+.screen-panel.active{ display:flex; }
+
+/* ---------------- Cards ---------------- */
+.card{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius-md);
+  padding:18px; margin-bottom:14px;
+}
+.card-flat{ background:var(--ivory-dim); border:1px solid var(--line); border-radius:var(--radius-md); padding:16px; margin-bottom:14px; }
+
+/* ---------------- Home: pregnancy ring ---------------- */
+.ring-card{
+  background:linear-gradient(160deg, var(--emerald), #164C40);
+  border-radius:var(--radius-lg); padding:22px; color:#fff; display:flex; align-items:center; gap:18px;
+  margin-bottom:16px; box-shadow:0 14px 30px -14px rgba(31,111,92,.55);
+}
+.ring-wrap{ position:relative; width:104px; height:104px; flex:0 0 auto; }
+.ring-wrap svg{ transform:rotate(-90deg); }
+.ring-center{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.ring-center b{ font-family:'Baloo 2',sans-serif; font-size:1.5rem; line-height:1; }
+.ring-center span{ font-size:.6rem; letter-spacing:.06em; opacity:.85; }
+.ring-info .trimester{
+  display:inline-block; font-family:'JetBrains Mono',monospace; font-size:.66rem; letter-spacing:.1em; text-transform:uppercase;
+  background:rgba(255,255,255,.18); padding:4px 10px; border-radius:100px; margin-bottom:8px;
+}
+.ring-info h3{ font-size:1.15rem; }
+.ring-info p{ font-size:.8rem; opacity:.9; margin-top:4px; }
+
+.quick-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px; }
+.quick-btn{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius-sm);
+  padding:12px 6px; text-align:center; font-size:.68rem; font-weight:600; color:var(--ink);
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+}
+.quick-btn .ic{ font-size:1.3rem; }
+.quick-btn:active{ transform:scale(.96); }
+
+.alert-card{
+  background:var(--danger-bg); border:1px solid #F0C4C4; border-radius:var(--radius-md);
+  padding:16px; margin-bottom:16px; display:flex; gap:12px; align-items:flex-start;
+}
+.alert-card .ic{ font-size:1.4rem; }
+.alert-card h4{ color:var(--danger); font-size:.92rem; }
+.alert-card p{ font-size:.78rem; color:#7A2E2E; margin-top:4px; line-height:1.5; }
+.alert-card .call-btn{
+  margin-top:10px; display:inline-block; background:var(--danger); color:#fff; font-weight:700;
+  font-size:.78rem; padding:9px 16px; border-radius:100px;
+}
+
+.section-title{
+  display:flex; align-items:center; justify-content:space-between; margin:6px 0 10px;
+}
+.section-title h4{ font-size:.95rem; color:var(--ink); }
+.section-title a, .section-title button.link{ font-size:.76rem; color:var(--raspberry); font-weight:600; }
+
+.next-visit{
+  display:flex; align-items:center; gap:14px; background:#fff; border:1px solid var(--line);
+  border-radius:var(--radius-md); padding:14px; margin-bottom:16px;
+}
+.next-visit .date-badge{
+  width:52px; height:52px; border-radius:14px; background:var(--ivory-dim); flex:0 0 auto;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid var(--line);
+}
+.next-visit .date-badge b{ font-family:'Baloo 2',sans-serif; font-size:1.1rem; line-height:1; color:var(--raspberry); }
+.next-visit .date-badge span{ font-size:.6rem; color:var(--ink-soft); text-transform:uppercase; }
+.next-visit h4{ font-size:.9rem; }
+.next-visit p{ font-size:.76rem; color:var(--ink-soft); margin-top:2px; }
+
+/* ---------------- Forms ---------------- */
+.field{ margin-bottom:14px; }
+.field label{
+  display:block; font-family:'JetBrains Mono',monospace; font-size:.66rem; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-soft); margin-bottom:6px;
+}
+.field input, .field select, .field textarea{
+  width:100%; padding:11px 13px; border-radius:10px; border:1.5px solid var(--line);
+  background:#fff; font-size:.9rem; color:var(--ink);
+}
+.field input:focus, .field select:focus, .field textarea:focus{
+  outline:none; border-color:var(--raspberry); box-shadow:0 0 0 3px rgba(217,79,112,.16);
+}
+.field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+.chip-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+.chip{
+  border:1.5px solid var(--line); border-radius:100px; padding:8px 14px; font-size:.78rem; font-weight:600;
+  background:#fff; color:var(--ink-soft);
+}
+.chip.selected{ background:var(--raspberry); border-color:var(--raspberry); color:#fff; }
+.chip.danger-chip.selected{ background:var(--danger); border-color:var(--danger); }
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:13px 20px; border-radius:100px; font-weight:700; font-size:.88rem; width:100%;
+}
+.btn-primary{ background:var(--raspberry); color:#fff; }
+.btn-primary:active{ background:var(--raspberry-deep); }
+.btn-outline{ background:#fff; border:1.5px solid var(--line); color:var(--ink); }
+.btn-dark{ background:var(--ink); color:#fff; }
+.btn-sm{ width:auto; padding:9px 16px; font-size:.78rem; }
+
+/* Kick counter */
+.kick-counter{
+  text-align:center; background:linear-gradient(160deg, var(--gold), #C97F1E); border-radius:var(--radius-lg);
+  padding:22px; color:#fff; margin-bottom:16px;
+}
+.kick-counter .count{ font-family:'Baloo 2',sans-serif; font-size:2.6rem; line-height:1; }
+.kick-counter .label{ font-size:.75rem; opacity:.9; margin-top:2px; }
+.kick-counter .tap-btn{
+  margin-top:16px; background:rgba(255,255,255,.22); border:1.5px solid rgba(255,255,255,.5);
+  color:#fff; font-weight:700; padding:14px; border-radius:16px; width:100%; font-size:.9rem;
+}
+.kick-counter .tap-btn:active{ transform:scale(.97); }
+.kick-actions{ display:flex; gap:10px; margin-top:12px; }
+.kick-actions .btn{ font-size:.76rem; padding:10px; }
+
+/* History list */
+.hist-item{
+  display:flex; justify-content:space-between; align-items:flex-start; background:#fff;
+  border:1px solid var(--line); border-radius:var(--radius-md); padding:13px 15px; margin-bottom:10px;
+}
+.hist-item .hd{ font-size:.68rem; color:var(--ink-soft); font-family:'JetBrains Mono',monospace; margin-bottom:4px; }
+.hist-item .metrics{ display:flex; gap:14px; flex-wrap:wrap; font-size:.82rem; font-weight:600; }
+.hist-item .metrics span.flag{ color:var(--danger); }
+.hist-item .tags{ display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+.hist-item .tag{ font-size:.66rem; background:var(--ivory-dim); padding:3px 8px; border-radius:100px; color:var(--ink-soft); }
+.hist-item .tag.danger-tag{ background:var(--danger-bg); color:var(--danger); }
+
+/* Visits timeline */
+.visit-item{
+  display:flex; gap:14px; margin-bottom:4px; position:relative; padding-bottom:22px;
+}
+.visit-item::before{
+  content:''; position:absolute; left:17px; top:38px; bottom:0; width:2px; background:var(--line);
+}
+.visit-item:last-child::before{ display:none; }
+.visit-dot{
+  width:36px; height:36px; border-radius:50%; flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+  font-size:.9rem; border:2px solid var(--line); background:#fff; z-index:1;
+}
+.visit-item.done .visit-dot{ background:var(--emerald); border-color:var(--emerald); color:#fff; }
+.visit-item.due .visit-dot{ background:var(--gold); border-color:var(--gold); color:#fff; }
+.visit-body{ flex:1; background:#fff; border:1px solid var(--line); border-radius:var(--radius-md); padding:12px 14px; }
+.visit-body h4{ font-size:.86rem; }
+.visit-body p{ font-size:.74rem; color:var(--ink-soft); margin-top:2px; }
+.visit-body .row{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+.visit-body input[type=checkbox]{ width:18px; height:18px; accent-color:var(--emerald); }
+.visit-status{ font-size:.66rem; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.06em; }
+.visit-item.done .visit-status{ color:var(--emerald); }
+.visit-item.due .visit-status{ color:var(--gold); }
+.visit-item.upcoming .visit-status{ color:var(--ink-soft); }
+
+/* Learn */
+.tip-card{
+  background:linear-gradient(160deg, var(--raspberry), var(--raspberry-deep)); color:#fff;
+  border-radius:var(--radius-lg); padding:20px; margin-bottom:16px;
+}
+.tip-card span.eyebrow{ font-family:'JetBrains Mono',monospace; font-size:.64rem; letter-spacing:.12em; text-transform:uppercase; opacity:.85; }
+.tip-card h3{ font-size:1.05rem; margin-top:8px; line-height:1.3; }
+.tip-card p{ font-size:.8rem; margin-top:8px; opacity:.92; line-height:1.5; }
+
+.danger-list{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.danger-list li{
+  display:flex; align-items:center; gap:10px; background:var(--danger-bg); border-radius:var(--radius-sm);
+  padding:11px 13px; font-size:.82rem; color:#7A2E2E; font-weight:600;
+}
+.disclaimer{
+  font-size:.72rem; color:var(--ink-soft); line-height:1.6; padding:14px; background:var(--ivory-dim);
+  border-radius:var(--radius-sm); margin-top:6px;
+}
+
+/* Profile */
+.avatar-row{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+.avatar{
+  width:58px; height:58px; border-radius:50%; background:linear-gradient(160deg,var(--raspberry),var(--gold));
+  display:flex; align-items:center; justify-content:center; color:#fff; font-family:'Baloo 2',sans-serif; font-size:1.3rem;
+}
+.avatar-row h3{ font-size:1.1rem; }
+.avatar-row p{ font-size:.78rem; color:var(--ink-soft); }
+
+.empty-state{ text-align:center; padding:40px 16px; color:var(--ink-soft); }
+.empty-state .ic{ font-size:2.2rem; margin-bottom:10px; }
+.empty-state h4{ color:var(--ink); font-size:1rem; margin-bottom:6px; }
+.empty-state p{ font-size:.82rem; line-height:1.5; }
+
+/* ---------------- Bottom nav ---------------- */
+.tabbar{
+  flex:0 0 auto; display:flex; border-top:1px solid var(--line); background:#fff;
+  padding:8px 6px calc(env(safe-area-inset-bottom, 10px) + 6px);
+}
+.tab-btn{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 2px;
+  color:var(--ink-soft); border-radius:12px;
+}
+.tab-btn .ic{ font-size:1.15rem; }
+.tab-btn span{ font-size:.6rem; font-weight:600; }
+.tab-btn.active{ color:var(--raspberry); }
+
+.toast{
+  position:absolute; bottom:96px; left:50%; transform:translateX(-50%) translateY(10px);
+  background:var(--ink); color:#fff; font-weight:600; font-size:.8rem; padding:11px 20px; border-radius:100px;
+  opacity:0; pointer-events:none; transition:all .3s ease; z-index:50; white-space:nowrap;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+@media (max-width:480px){
+  body{ padding:0; align-items:stretch; }
+  .frame-wrap{ gap:0; height:100vh; }
+  .frame-caption{ display:none; }
+  .phone{ width:100%; height:100vh; max-height:none; border-radius:0; padding:0; box-shadow:none; }
+  .screen{ border-radius:0; }
+  .notch{ display:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="frame-wrap">
+  <span class="frame-caption">Mobile preview — MamaCare</span>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="statusbar"><span id="clock">9:41</span><span>●●● MamaCare</span></div>
+
+      <!-- HOME -->
+      <div class="screen-panel active" id="panel-home">
+        <div class="app-header">
+          <span class="eyebrow">Antenatal Care Tracker</span>
+          <h2 id="homeGreeting">Hello 👋</h2>
+          <p class="sub" id="homeDate"></p>
+        </div>
+        <div class="app-body" id="homeBody"></div>
+      </div>
+
+      <!-- TRACK -->
+      <div class="screen-panel" id="panel-track">
+        <div class="app-header">
+          <span class="eyebrow">Health Log</span>
+          <h2>Track today</h2>
+          <p class="sub">Weight, blood pressure, symptoms &amp; baby's kicks</p>
+        </div>
+        <div class="app-body" id="trackBody"></div>
+      </div>
+
+      <!-- VISITS -->
+      <div class="screen-panel" id="panel-visits">
+        <div class="app-header">
+          <span class="eyebrow">Antenatal Care</span>
+          <h2>Visit schedule</h2>
+          <p class="sub">Based on the WHO 8-contact ANC model</p>
+        </div>
+        <div class="app-body" id="visitsBody"></div>
+      </div>
+
+      <!-- LEARN -->
+      <div class="screen-panel" id="panel-learn">
+        <div class="app-header">
+          <span class="eyebrow">Guidance</span>
+          <h2>Learn &amp; stay safe</h2>
+          <p class="sub">Tips for this stage, and signs to watch for</p>
+        </div>
+        <div class="app-body" id="learnBody"></div>
+      </div>
+
+      <!-- PROFILE -->
+      <div class="screen-panel" id="panel-profile">
+        <div class="app-header">
+          <span class="eyebrow">Your details</span>
+          <h2>Profile</h2>
+          <p class="sub">Used to personalise your tracker</p>
+        </div>
+        <div class="app-body" id="profileBody"></div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+
+      <div class="tabbar">
+        <button class="tab-btn active" data-tab="home"><span class="ic">🏠</span><span>Home</span></button>
+        <button class="tab-btn" data-tab="track"><span class="ic">📊</span><span>Track</span></button>
+        <button class="tab-btn" data-tab="visits"><span class="ic">🩺</span><span>Visits</span></button>
+        <button class="tab-btn" data-tab="learn"><span class="ic">📘</span><span>Learn</span></button>
+        <button class="tab-btn" data-tab="profile"><span class="ic">👤</span><span>Profile</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   MamaCare — state, storage, and rendering
+   ========================================================= */
+const STORE = {
+  PROFILE: 'mch_profile',
+  VITALS: 'mch_vitals',
+  VISITS: 'mch_visit_status'
+};
+
+const ANC_SCHEDULE = [
+  { n:1, week:12, label:'First contact', desc:'Confirm pregnancy, initial screening & tests' },
+  { n:2, week:20, label:'Second contact', desc:'Anomaly scan, growth check' },
+  { n:3, week:26, label:'Third contact', desc:'Blood pressure & urine screening' },
+  { n:4, week:30, label:'Fourth contact', desc:'Anaemia check, growth review' },
+  { n:5, week:34, label:'Fifth contact', desc:'Position check, birth planning' },
+  { n:6, week:36, label:'Sixth contact', desc:'Final growth & position check' },
+  { n:7, week:38, label:'Seventh contact', desc:'Review birth plan & danger signs' },
+  { n:8, week:40, label:'Eighth contact', desc:'Post-term monitoring if not yet delivered' }
+];
+
+const DANGER_SYMPTOMS = ['Vaginal bleeding','Severe headache','Blurred vision','Severe abdominal pain','Reduced fetal movement','High fever','Convulsions','Swelling of face/hands'];
+const MILD_SYMPTOMS = ['Nausea','Mild back pain','Heartburn','Fatigue','Mild ankle swelling','None today'];
+const ALL_SYMPTOMS = [...DANGER_SYMPTOMS, ...MILD_SYMPTOMS];
+
+const WEEK_TIPS = [
+  { upTo:13, title:'First trimester: build the foundation', body:'Start a daily folic acid supplement if you are not already, and book your first antenatal contact before 12 weeks. Mild nausea and fatigue are common — small, frequent meals often help.' },
+  { upTo:27, title:'Second trimester: the steady stretch', body:'This is often the most comfortable stage. Keep attending scheduled visits, eat iron-rich foods (beans, leafy greens, liver) to guard against anaemia, and start noticing regular movement patterns.' },
+  { upTo:40, title:'Third trimester: getting ready', body:'Start counting fetal movements daily. Pack a birth bag, confirm your delivery facility, and review the danger signs below with your household so everyone knows when to act.' }
+];
+
+function getProfile(){ return JSON.parse(localStorage.getItem(STORE.PROFILE) || 'null'); }
+function saveProfile(p){ localStorage.setItem(STORE.PROFILE, JSON.stringify(p)); }
+function getVitals(){ return JSON.parse(localStorage.getItem(STORE.VITALS) || '[]'); }
+function saveVitals(v){ localStorage.setItem(STORE.VITALS, JSON.stringify(v)); }
+function getVisitStatus(){ return JSON.parse(localStorage.getItem(STORE.VISITS) || '{}'); }
+function saveVisitStatus(s){ localStorage.setItem(STORE.VISITS, JSON.stringify(s)); }
+
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+/* ---------- Date / pregnancy math ---------- */
+function daysBetween(a, b){ return Math.floor((b - a) / 86400000); }
+function fmtDate(d){ return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); }
+function fmtDateShort(d){ return { day: d.getDate(), mon: d.toLocaleDateString('en-GB',{month:'short'}).toUpperCase() }; }
+
+function pregnancyInfo(){
+  const p = getProfile();
+  if(!p || !p.lmp) return null;
+  const lmp = new Date(p.lmp + 'T00:00:00');
+  const today = new Date();
+  const dayDiff = daysBetween(lmp, today);
+  const week = Math.min(42, Math.max(1, Math.floor(dayDiff / 7) + 1));
+  const edd = new Date(lmp.getTime() + 280 * 86400000);
+  const daysToDue = daysBetween(today, edd);
+  const trimester = week <= 13 ? 1 : week <= 27 ? 2 : 3;
+  return { lmp, edd, week, daysToDue, trimester, name: p.name || 'Mama' };
+}
+
+/* ---------- Tab switching ---------- */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.screen-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  renderAll();
+}
+
+/* ---------- Clock ---------- */
+function tickClock(){
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', hour12:false });
+}
+tickClock(); setInterval(tickClock, 30000);
+
+/* ---------- HOME ---------- */
+function renderHome(){
+  const info = pregnancyInfo();
+  const greeting = document.getElementById('homeGreeting');
+  const dateEl = document.getElementById('homeDate');
+  dateEl.textContent = fmtDate(new Date());
+
+  if(!info){
+    greeting.textContent = 'Welcome to MamaCare 👋';
+    document.getElementById('homeBody').innerHTML = `
+      <div class="empty-state">
+        <div class="ic">🤰</div>
+        <h4>Let's set up your tracker</h4>
+        <p>Add the first day of your last period in your profile so we can calculate your due date and visit schedule.</p>
+        <div style="margin-top:18px;"><button class="btn btn-primary" onclick="switchTab('profile')">Go to profile</button></div>
+      </div>`;
+    return;
+  }
+
+  greeting.textContent = `Hello, ${info.name} 👋`;
+  const circumference = 2 * Math.PI * 46;
+  const pct = Math.min(1, info.week / 40);
+  const dashOffset = circumference * (1 - pct);
+
+  const vitals = getVitals();
+  const lastEntry = vitals[0];
+  const dangerHit = lastEntry && lastEntry.symptoms && lastEntry.symptoms.some(s => DANGER_SYMPTOMS.includes(s));
+  const bpHigh = lastEntry && lastEntry.systolic && (lastEntry.systolic >= 140 || lastEntry.diastolic >= 90);
+
+  const visitStatus = getVisitStatus();
+  const nextVisit = ANC_SCHEDULE.find(c => !(visitStatus[c.n] && visitStatus[c.n].done));
+  let nextVisitDate = null;
+  if(nextVisit){ nextVisitDate = new Date(info.lmp.getTime() + nextVisit.week * 7 * 86400000); }
+
+  let html = '';
+
+  if(dangerHit || bpHigh){
+    html += `
+      <div class="alert-card">
+        <span class="ic">⚠️</span>
+        <div>
+          <h4>Please seek care soon</h4>
+          <p>${dangerHit ? 'Your last log included a symptom that needs prompt medical attention.' : 'Your last blood pressure reading was higher than typical for pregnancy.'} Contact your health facility, or call the emergency line below.</p>
+          <a class="call-btn" href="tel:112">Call 112 (Emergency)</a>
+        </div>
+      </div>`;
+  }
+
+  html += `
+    <div class="ring-card">
+      <div class="ring-wrap">
+        <svg width="104" height="104" viewBox="0 0 104 104">
+          <circle cx="52" cy="52" r="46" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="10"/>
+          <circle cx="52" cy="52" r="46" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round"
+            stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}"/>
+        </svg>
+        <div class="ring-center"><b>${info.week}</b><span>OF 40 WKS</span></div>
+      </div>
+      <div class="ring-info">
+        <span class="trimester">Trimester ${info.trimester}</span>
+        <h3>${info.daysToDue > 0 ? `${info.daysToDue} days to go` : 'Due date has passed'}</h3>
+        <p>Estimated due date: ${fmtDate(info.edd)}</p>
+      </div>
+    </div>
+
+    <div class="quick-row">
+      <button class="quick-btn" onclick="switchTab('track')"><span class="ic">⚖️</span>Weight</button>
+      <button class="quick-btn" onclick="switchTab('track')"><span class="ic">🩸</span>Blood pressure</button>
+      <button class="quick-btn" onclick="switchTab('track')"><span class="ic">👣</span>Kick count</button>
+      <button class="quick-btn" onclick="switchTab('track')"><span class="ic">📝</span>Symptoms</button>
+    </div>
+
+    <div class="section-title"><h4>Next antenatal visit</h4><button class="link" onclick="switchTab('visits')">See all</button></div>
+    ${nextVisit ? `
+      <div class="next-visit">
+        <div class="date-badge"><b>${fmtDateShort(nextVisitDate).day}</b><span>${fmtDateShort(nextVisitDate).mon}</span></div>
+        <div>
+          <h4>${nextVisit.label} · Week ${nextVisit.week}</h4>
+          <p>${nextVisit.desc}</p>
+        </div>
+      </div>` : `<div class="card-flat"><p style="font-size:.82rem; color:var(--ink-soft);">All 8 antenatal contacts completed 🎉</p></div>`}
+
+    <div class="section-title"><h4>Recent activity</h4><button class="link" onclick="switchTab('track')">View log</button></div>
+    ${vitals.length ? vitals.slice(0,2).map(vitalCardHTML).join('') : `<div class="card-flat"><p style="font-size:.82rem; color:var(--ink-soft);">No entries yet — log your first check-in from the Track tab.</p></div>`}
+  `;
+
+  document.getElementById('homeBody').innerHTML = html;
+}
+
+function vitalCardHTML(v){
+  const d = new Date(v.date);
+  const symptoms = v.symptoms || [];
+  return `
+    <div class="hist-item">
+      <div>
+        <div class="hd">${d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} · ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</div>
+        <div class="metrics">
+          ${v.weight ? `<span>⚖️ ${v.weight} kg</span>` : ''}
+          ${v.systolic ? `<span class="${(v.systolic>=140||v.diastolic>=90)?'flag':''}">🩸 ${v.systolic}/${v.diastolic}</span>` : ''}
+          ${v.kicks ? `<span>👣 ${v.kicks} kicks</span>` : ''}
+        </div>
+        ${symptoms.length ? `<div class="tags">${symptoms.map(s => `<span class="tag ${DANGER_SYMPTOMS.includes(s)?'danger-tag':''}">${s}</span>`).join('')}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+/* ---------- TRACK ---------- */
+let selectedSymptoms = [];
+let kickSessionCount = 0;
+let kickSessionActive = false;
+let kickStartTime = null;
+
+function renderTrack(){
+  const html = `
+    <div class="kick-counter">
+      <div class="count" id="kickCount">${kickSessionCount}</div>
+      <div class="label">Baby's kicks this session</div>
+      <button class="tap-btn" id="kickTapBtn">${kickSessionActive ? 'Tap for every kick' : 'Start counting session'}</button>
+      ${kickSessionActive ? `
+      <div class="kick-actions">
+        <button class="btn btn-outline" style="background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.5); color:#fff;" id="kickResetBtn">Reset</button>
+        <button class="btn btn-dark" id="kickSaveBtn">Save session</button>
+      </div>` : ''}
+    </div>
+
+    <div class="card">
+      <div class="field-row">
+        <div class="field">
+          <label for="fWeight">Weight (kg)</label>
+          <input type="number" step="0.1" id="fWeight" placeholder="e.g. 62.5">
+        </div>
+        <div class="field">
+          <label for="fSys">Blood pressure</label>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input type="number" id="fSys" placeholder="Sys">
+            <span style="color:var(--ink-soft);">/</span>
+            <input type="number" id="fDia" placeholder="Dia">
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>How are you feeling? (select any)</label>
+        <div class="chip-grid" id="symptomChips"></div>
+      </div>
+
+      <div class="field">
+        <label for="fNote">Note (optional)</label>
+        <textarea id="fNote" rows="2" placeholder="Anything else worth remembering…"></textarea>
+      </div>
+
+      <button class="btn btn-primary" id="saveVitalsBtn">Save today's log</button>
+    </div>
+
+    <div class="section-title"><h4>History</h4></div>
+    <div id="vitalsHistory"></div>
+  `;
+  document.getElementById('trackBody').innerHTML = html;
+
+  const chipWrap = document.getElementById('symptomChips');
+  ALL_SYMPTOMS.forEach(s => {
+    const isDanger = DANGER_SYMPTOMS.includes(s);
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip' + (isDanger ? ' danger-chip' : '') + (selectedSymptoms.includes(s) ? ' selected' : '');
+    chip.textContent = s;
+    chip.addEventListener('click', () => {
+      if(s === 'None today'){ selectedSymptoms = selectedSymptoms.includes(s) ? [] : ['None today']; }
+      else{
+        selectedSymptoms = selectedSymptoms.filter(x => x !== 'None today');
+        selectedSymptoms = selectedSymptoms.includes(s) ? selectedSymptoms.filter(x => x !== s) : [...selectedSymptoms, s];
+      }
+      renderTrack();
+    });
+    chipWrap.appendChild(chip);
+  });
+
+  document.getElementById('kickTapBtn').addEventListener('click', () => {
+    if(!kickSessionActive){ kickSessionActive = true; kickSessionCount = 0; kickStartTime = Date.now(); }
+    else{ kickSessionCount++; }
+    renderTrack();
+  });
+  const resetBtn = document.getElementById('kickResetBtn');
+  if(resetBtn) resetBtn.addEventListener('click', () => { kickSessionCount = 0; renderTrack(); });
+  const saveKickBtn = document.getElementById('kickSaveBtn');
+  if(saveKickBtn) saveKickBtn.addEventListener('click', () => {
+    const vitals = getVitals();
+    vitals.unshift({ date: new Date().toISOString(), kicks: kickSessionCount });
+    saveVitals(vitals);
+    kickSessionActive = false; kickSessionCount = 0;
+    toast('Kick session saved');
+    renderTrack(); renderHome();
+  });
+
+  document.getElementById('saveVitalsBtn').addEventListener('click', () => {
+    const weight = document.getElementById('fWeight').value;
+    const sys = document.getElementById('fSys').value;
+    const dia = document.getElementById('fDia').value;
+    const note = document.getElementById('fNote').value.trim();
+
+    if(!weight && !sys && !selectedSymptoms.length && !note){
+      toast('Add at least one detail to save');
+      return;
+    }
+
+    const entry = { date: new Date().toISOString() };
+    if(weight) entry.weight = Number(weight);
+    if(sys) entry.systolic = Number(sys);
+    if(dia) entry.diastolic = Number(dia);
+    if(selectedSymptoms.length) entry.symptoms = [...selectedSymptoms];
+    if(note) entry.note = note;
+
+    const vitals = getVitals();
+    vitals.unshift(entry);
+    saveVitals(vitals);
+
+    const dangerHit = entry.symptoms && entry.symptoms.some(s => DANGER_SYMPTOMS.includes(s));
+    selectedSymptoms = [];
+    toast(dangerHit ? 'Saved — please see the alert on Home' : 'Log saved');
+    renderTrack(); renderHome();
+  });
+
+  const hist = document.getElementById('vitalsHistory');
+  const vitals = getVitals();
+  hist.innerHTML = vitals.length ? vitals.map(vitalCardHTML).join('') : `
+    <div class="empty-state">
+      <div class="ic">📋</div>
+      <h4>No entries yet</h4>
+      <p>Your saved check-ins will show up here.</p>
+    </div>`;
+}
+
+/* ---------- VISITS ---------- */
+function renderVisits(){
+  const info = pregnancyInfo();
+  const body = document.getElementById('visitsBody');
+  if(!info){
+    body.innerHTML = `
+      <div class="empty-state">
+        <div class="ic">🩺</div>
+        <h4>Set your due date first</h4>
+        <p>Add the first day of your last period in Profile to generate your personalised visit schedule.</p>
+        <div style="margin-top:18px;"><button class="btn btn-primary" onclick="switchTab('profile')">Go to profile</button></div>
+      </div>`;
+    return;
+  }
+
+  const status = getVisitStatus();
+  const today = new Date();
+
+  body.innerHTML = ANC_SCHEDULE.map(c => {
+    const date = new Date(info.lmp.getTime() + c.week * 7 * 86400000);
+    const done = status[c.n] && status[c.n].done;
+    const state = done ? 'done' : (date <= today ? 'due' : 'upcoming');
+    const statusLabel = done ? 'Completed' : (date <= today ? 'Due now' : 'Upcoming');
+    return `
+      <div class="visit-item ${state}">
+        <div class="visit-dot">${done ? '✓' : c.n}</div>
+        <div class="visit-body">
+          <h4>${c.label} · Week ${c.week}</h4>
+          <p>${c.desc} — target: ${fmtDate(date)}</p>
+          <div class="row">
+            <label style="display:flex; align-items:center; gap:8px; font-size:.78rem; color:var(--ink-soft);">
+              <input type="checkbox" data-visit="${c.n}" ${done ? 'checked' : ''}> Mark complete
+            </label>
+            <span class="visit-status">${statusLabel}</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  body.querySelectorAll('[data-visit]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const n = cb.dataset.visit;
+      const s = getVisitStatus();
+      s[n] = { done: cb.checked };
+      saveVisitStatus(s);
+      toast(cb.checked ? 'Visit marked complete' : 'Visit unmarked');
+      renderVisits(); renderHome();
+    });
+  });
+}
+
+/* ---------- LEARN ---------- */
+function renderLearn(){
+  const info = pregnancyInfo();
+  const week = info ? info.week : null;
+  const tip = week ? (WEEK_TIPS.find(t => week <= t.upTo) || WEEK_TIPS[WEEK_TIPS.length-1]) : WEEK_TIPS[0];
+
+  document.getElementById('learnBody').innerHTML = `
+    <div class="tip-card">
+      <span class="eyebrow">${week ? `Week ${week} guidance` : 'General guidance'}</span>
+      <h3>${tip.title}</h3>
+      <p>${tip.body}</p>
+    </div>
+
+    <div class="section-title"><h4>Danger signs — seek care immediately</h4></div>
+    <ul class="danger-list">
+      ${DANGER_SYMPTOMS.map(s => `<li>⚠️ ${s}</li>`).join('')}
+    </ul>
+
+    <div class="disclaimer">
+      MamaCare provides general educational information only and does not replace professional medical advice. Always attend your scheduled antenatal visits, and contact your health facility or emergency services (112) immediately for any of the signs above.
+    </div>
+  `;
+}
+
+/* ---------- PROFILE ---------- */
+function renderProfile(){
+  const p = getProfile() || {};
+  const info = pregnancyInfo();
+
+  document.getElementById('profileBody').innerHTML = `
+    <div class="avatar-row">
+      <div class="avatar">${(p.name || 'M').charAt(0).toUpperCase()}</div>
+      <div>
+        <h3>${p.name || 'Set up your profile'}</h3>
+        <p>${info ? `Week ${info.week} · Due ${fmtDate(info.edd)}` : 'Add your details below'}</p>
+      </div>
+    </div>
+ 
+    <div class="card">
+      <div class="field">
+        <label for="pName">Your name</label>
+        <input type="text" id="pName" value="${p.name || ''}" placeholder="e.g. Amaka">
+      </div>
+      <div class="field">
+        <label for="pLmp">First day of last menstrual period</label>
+        <input type="date" id="pLmp" value="${p.lmp || ''}">
+      </div>
+      <div class="field">
+        <label for="pFacility">Preferred health facility</label>
+        <input type="text" id="pFacility" value="${p.facility || ''}" placeholder="e.g. Primary Health Centre, Ikeja">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="pContactName">Emergency contact</label>
+          <input type="text" id="pContactName" value="${p.contactName || ''}" placeholder="Name">
+        </div>
+        <div class="field">
+          <label for="pContactPhone">Contact phone</label>
+          <input type="tel" id="pContactPhone" value="${p.contactPhone || ''}" placeholder="080…">
+        </div>
+      </div>
+      <button class="btn btn-primary" id="saveProfileBtn">Save profile</button>
+    </div>
+
+    ${p.contactPhone ? `<a href="tel:${p.contactPhone}" class="btn btn-outline" style="margin-bottom:14px;">📞 Call emergency contact</a>` : ''}
+    <a href="tel:112" class="btn btn-dark">🚨 Call emergency line (112)</a>
+  `;
+
+  document.getElementById('saveProfileBtn').addEventListener('click', () => {
+    const lmp = document.getElementById('pLmp').value;
+    if(!lmp){ toast('Please add your last period date'); return; }
+    saveProfile({
+      name: document.getElementById('pName').value.trim(),
+      lmp,
+      facility: document.getElementById('pFacility').value.trim(),
+      contactName: document.getElementById('pContactName').value.trim(),
+      contactPhone: document.getElementById('pContactPhone').value.trim()
+    });
+    toast('Profile saved');
+    renderAll();
+    switchTab('home');
+  });
+}
+
+/* ---------- Render orchestration ---------- */
+function renderAll(){
+  renderHome();
+  renderTrack();
+  renderVisits();
+  renderLearn();
+  renderProfile();
+}
+renderAll();
+</script>
+</body>
+</html>

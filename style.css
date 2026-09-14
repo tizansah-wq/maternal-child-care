@@ -1,0 +1,172 @@
+/* ===== Design Tokens ===== */
+:root {
+  --color-primary: #E85D75;
+  --color-primary-dark: #C94861;
+  --color-secondary: #2E86AB;
+  --color-accent: #6FCF97;
+  --color-warning: #F2C94C;
+  --color-danger: #EB5757;
+  --color-bg: #FBF7F5;
+  --color-surface: #FFFFFF;
+  --color-text: #2D2A32;
+  --color-text-muted: #8A8690;
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --shadow-card: 0 4px 16px rgba(45, 42, 50, 0.08);
+  --font-main: 'Poppins', 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-main);
+  background: var(--color-bg);
+  color: var(--color-text);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.btn-primary:hover, .btn-primary:focus {
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+.btn-outline-primary {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.btn-outline-primary:hover {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.btn-cta {
+  border-radius: 30px;
+  padding: 12px 28px;
+  font-weight: 600;
+}
+
+/* ===== Landing Page ===== */
+.landing-header {
+  display: flex;
+  align-items: center;
+  padding: 18px 24px;
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-icon { color: var(--color-primary); font-size: 1.6rem; }
+.brand-name { font-weight: 700; font-size: 1.3rem; }
+
+.hero-section {
+  text-align: center;
+  padding: 20px 24px 40px;
+}
+.hero-illustration {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-icon { color: white; font-size: 3rem; }
+.hero-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.hero-subtitle {
+  color: var(--color-text-muted);
+  font-size: 0.98rem;
+  max-width: 480px;
+  margin: 0 auto 24px;
+}
+.hero-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.section-title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+}
+
+.features-section, .about-section, .contact-section {
+  padding: 30px 20px;
+}
+.features-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.feature-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  text-align: center;
+}
+.feature-icon {
+  font-size: 1.8rem;
+  color: var(--color-primary);
+  margin-bottom: 10px;
+}
+.feature-card h3 { font-size: 1.05rem; margin-bottom: 6px; }
+.feature-card p { color: var(--color-text-muted); font-size: 0.9rem; margin: 0; }
+
+.about-section p, .contact-section p {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.disclaimer-box {
+  max-width: 600px;
+  margin: 20px auto 0;
+  background: #FFF6E5;
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.disclaimer-box i { color: var(--color-warning); font-size: 1.2rem; margin-top: 2px; }
+.disclaimer-box p { margin: 0; font-size: 0.85rem; text-align: left; color: var(--color-text); }
+
+.landing-footer {
+  text-align: center;
+  padding: 20px;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+/* ===== Reusable Card / Card System (used across app) ===== */
+.app-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.status-upcoming { background: #E7F0FA; color: var(--color-secondary); }
+.status-completed { background: #E6F7EC; color: #1E8449; }
+.status-cancelled, .status-missed { background: #FCEBEB; color: var(--color-danger); }
+.status-due { background: #FFF6E5; color: #B7791F; }
